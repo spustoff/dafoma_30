@@ -10,25 +10,36 @@ import SwiftUI
 
 class OnboardingViewModel: ObservableObject {
     @Published var currentStep = 0
-    @Published var isCompleted = false
     @Published var userName = ""
     @Published var monthlyBudget = ""
     @Published var selectedFinancialGoals: Set<FinancialGoal> = []
     @Published var selectedTheme: FinancialTheme = .neon
+    @Published var isCompleted = false
     
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding = false
-    @AppStorage("userFinancialTheme") var userFinancialTheme = "neon"
-    @AppStorage("userMonthlyBudget") var userMonthlyBudget = 0.0
-    @AppStorage("userName") var storedUserName = ""
+    @AppStorage("userName") var savedUserName = ""
+    @AppStorage("userMonthlyBudget") var savedMonthlyBudget = 0.0
+    @AppStorage("userFinancialTheme") var savedFinancialTheme = "neon"
+    @AppStorage("userFinancialGoals") var savedFinancialGoals = ""
     
     let totalSteps = 4
     
     var progress: Double {
-        Double(currentStep) / Double(totalSteps)
+        Double(currentStep) / Double(totalSteps - 1)
+    }
+    
+    var canProceed: Bool {
+        switch currentStep {
+        case 0: return !userName.isEmpty
+        case 1: return !monthlyBudget.isEmpty && Double(monthlyBudget) != nil
+        case 2: return !selectedFinancialGoals.isEmpty
+        case 3: return true
+        default: return false
+        }
     }
     
     func nextStep() {
-        if currentStep < totalSteps {
+        if currentStep < totalSteps - 1 {
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentStep += 1
             }
@@ -43,129 +54,143 @@ class OnboardingViewModel: ObservableObject {
         }
     }
     
+    func skipOnboarding() {
+        completeOnboarding()
+    }
+    
     func completeOnboarding() {
         // Save user preferences
-        storedUserName = userName
-        userFinancialTheme = selectedTheme.rawValue
-        userMonthlyBudget = Double(monthlyBudget) ?? 0.0
-        hasCompletedOnboarding = true
+        savedUserName = userName
+        savedMonthlyBudget = Double(monthlyBudget) ?? 0.0
+        savedFinancialTheme = selectedTheme.rawValue
         
-        // Load sample data for demonstration
-        DataService.shared.loadSampleData()
+        // Save financial goals as comma-separated string
+        let goalsString = selectedFinancialGoals.map { $0.rawValue }.joined(separator: ",")
+        savedFinancialGoals = goalsString
         
-        withAnimation(.easeInOut(duration: 0.5)) {
-            isCompleted = true
-        }
-    }
-    
-    func skipOnboarding() {
         hasCompletedOnboarding = true
-        DataService.shared.loadSampleData()
-        withAnimation(.easeInOut(duration: 0.5)) {
-            isCompleted = true
-        }
-    }
-    
-    var canProceed: Bool {
-        switch currentStep {
-        case 0: return !userName.isEmpty
-        case 1: return !monthlyBudget.isEmpty && Double(monthlyBudget) != nil
-        case 2: return !selectedFinancialGoals.isEmpty
-        case 3: return true
-        default: return false
-        }
+        isCompleted = true
     }
 }
 
 enum FinancialGoal: String, CaseIterable, Identifiable {
-    case saveForEmergency = "Build Emergency Fund"
-    case payOffDebt = "Pay Off Debt"
-    case saveForRetirement = "Save for Retirement"
-    case buyHome = "Buy a Home"
-    case investInStocks = "Invest in Stocks"
-    case startBusiness = "Start a Business"
-    case travelMore = "Travel More"
-    case educationFund = "Education Fund"
+    case budgeting = "Better Budgeting"
+    case saving = "Increase Savings"
+    case investing = "Smart Investing"
+    case debtReduction = "Reduce Debt"
+    case emergencyFund = "Emergency Fund"
+    case retirement = "Retirement Planning"
+    case homeOwnership = "Buy a Home"
+    case travelFund = "Travel More"
+    case education = "Education Fund"
+    case businessInvestment = "Start Business"
+    case wealthBuilding = "Build Wealth"
+    case financialFreedom = "Financial Freedom"
     
     var id: String { rawValue }
     
     var icon: String {
         switch self {
-        case .saveForEmergency: return "shield.fill"
-        case .payOffDebt: return "creditcard.fill"
-        case .saveForRetirement: return "clock.fill"
-        case .buyHome: return "house.fill"
-        case .investInStocks: return "chart.line.uptrend.xyaxis"
-        case .startBusiness: return "briefcase.fill"
-        case .travelMore: return "airplane"
-        case .educationFund: return "graduationcap.fill"
+        case .budgeting: return "chart.pie.fill"
+        case .saving: return "banknote.fill"
+        case .investing: return "chart.line.uptrend.xyaxis"
+        case .debtReduction: return "minus.circle.fill"
+        case .emergencyFund: return "shield.fill"
+        case .retirement: return "person.fill"
+        case .homeOwnership: return "house.fill"
+        case .travelFund: return "airplane"
+        case .education: return "book.fill"
+        case .businessInvestment: return "building.2.fill"
+        case .wealthBuilding: return "dollarsign.circle.fill"
+        case .financialFreedom: return "star.fill"
         }
     }
     
     var description: String {
         switch self {
-        case .saveForEmergency: return "Build a safety net for unexpected expenses"
-        case .payOffDebt: return "Eliminate high-interest debt"
-        case .saveForRetirement: return "Secure your financial future"
-        case .buyHome: return "Save for your dream home"
-        case .investInStocks: return "Grow wealth through investments"
-        case .startBusiness: return "Fund your entrepreneurial dreams"
-        case .travelMore: return "Explore the world"
-        case .educationFund: return "Invest in knowledge and skills"
+        case .budgeting: return "Track and manage your spending effectively"
+        case .saving: return "Build consistent saving habits"
+        case .investing: return "Grow wealth through smart investments"
+        case .debtReduction: return "Pay off debts strategically"
+        case .emergencyFund: return "Create a financial safety net"
+        case .retirement: return "Secure your future retirement"
+        case .homeOwnership: return "Save for your dream home"
+        case .travelFund: return "Fund your travel adventures"
+        case .education: return "Invest in education and skills"
+        case .businessInvestment: return "Start or grow your business"
+        case .wealthBuilding: return "Accumulate long-term wealth"
+        case .financialFreedom: return "Achieve complete financial independence"
         }
     }
 }
 
 enum FinancialTheme: String, CaseIterable, Identifiable {
     case neon = "neon"
-    case minimalist = "minimalist"
-    case luxury = "luxury"
+    case minimal = "minimal"
+    case professional = "professional"
+    case vibrant = "vibrant"
+    case dark = "dark"
     case nature = "nature"
-    case tech = "tech"
     
     var id: String { rawValue }
     
     var displayName: String {
         switch self {
-        case .neon: return "Neon Futuristic"
-        case .minimalist: return "Clean Minimalist"
-        case .luxury: return "Premium Luxury"
-        case .nature: return "Natural Zen"
-        case .tech: return "Tech Forward"
+        case .neon: return "Neon Glow"
+        case .minimal: return "Minimal Clean"
+        case .professional: return "Professional"
+        case .vibrant: return "Vibrant Colors"
+        case .dark: return "Dark Mode"
+        case .nature: return "Nature Inspired"
         }
     }
     
     var description: String {
         switch self {
-        case .neon: return "Vibrant neon colors with futuristic vibes"
-        case .minimalist: return "Clean lines and simple elegance"
-        case .luxury: return "Rich colors and premium feel"
-        case .nature: return "Calming earth tones and organic shapes"
-        case .tech: return "Modern tech-inspired design"
+        case .neon: return "Futuristic neon aesthetics with glowing accents"
+        case .minimal: return "Clean, simple design with plenty of white space"
+        case .professional: return "Corporate-friendly with muted colors"
+        case .vibrant: return "Bold, energetic colors that inspire action"
+        case .dark: return "Easy on the eyes with dark backgrounds"
+        case .nature: return "Earth tones and natural color palette"
         }
     }
     
     var primaryColor: Color {
         switch self {
         case .neon: return Color(hex: "#fbd600")
-        case .minimalist: return Color.gray
-        case .luxury: return Color(hex: "#DAA520")
-        case .nature: return Color.green
-        case .tech: return Color.blue
+        case .minimal: return Color(hex: "#2c3e50")
+        case .professional: return Color(hex: "#34495e")
+        case .vibrant: return Color(hex: "#e74c3c")
+        case .dark: return Color(hex: "#ecf0f1")
+        case .nature: return Color(hex: "#27ae60")
         }
     }
     
     var backgroundColor: Color {
         switch self {
         case .neon: return Color.black
-        case .minimalist: return Color.white
-        case .luxury: return Color(hex: "#1a1a1a")
-        case .nature: return Color(hex: "#f5f5dc")
-        case .tech: return Color(hex: "#0a0a0a")
+        case .minimal: return Color.white
+        case .professional: return Color(hex: "#ecf0f1")
+        case .vibrant: return Color.white
+        case .dark: return Color(hex: "#2c3e50")
+        case .nature: return Color(hex: "#f8f9fa")
+        }
+    }
+    
+    var accentColor: Color {
+        switch self {
+        case .neon: return Color(hex: "#00ff88")
+        case .minimal: return Color(hex: "#3498db")
+        case .professional: return Color(hex: "#2980b9")
+        case .vibrant: return Color(hex: "#f39c12")
+        case .dark: return Color(hex: "#e67e22")
+        case .nature: return Color(hex: "#e67e22")
         }
     }
 }
 
+// Extension to support hex colors
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

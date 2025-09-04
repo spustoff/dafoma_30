@@ -122,3 +122,5 @@ struct MarketData: Codable {
         change >= 0
     }
 }
+
+

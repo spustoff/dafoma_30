@@ -31,6 +31,19 @@ class InvestmentViewModel: ObservableObject {
     private var dataService = DataService.shared
     private var cancellables = Set<AnyCancellable>()
     
+    enum InvestmentSortOption: String, CaseIterable {
+        case dateAscending = "Date (Oldest First)"
+        case dateDescending = "Date (Newest First)"
+        case purchaseDateAscending = "Purchase Date (Oldest First)"
+        case purchaseDateDescending = "Purchase Date (Newest First)"
+        case valueAscending = "Value (Low to High)"
+        case valueDescending = "Value (High to Low)"
+        case gainLossAscending = "Gain/Loss (Low to High)"
+        case gainLossDescending = "Gain/Loss (High to Low)"
+        case symbolAscending = "Symbol (A to Z)"
+        case symbolDescending = "Symbol (Z to A)"
+    }
+    
     var filteredInvestments: [Investment] {
         var result = dataService.investments
         
@@ -50,22 +63,26 @@ class InvestmentViewModel: ObservableObject {
         
         // Sort
         switch sortOption {
-        case .gainLossAscending:
-            result = result.sorted { $0.gainLoss < $1.gainLoss }
-        case .gainLossDescending:
-            result = result.sorted { $0.gainLoss > $1.gainLoss }
-        case .valueAscending:
-            result = result.sorted { $0.totalValue < $1.totalValue }
-        case .valueDescending:
-            result = result.sorted { $0.totalValue > $1.totalValue }
-        case .symbolAscending:
-            result = result.sorted { $0.symbol < $1.symbol }
-        case .symbolDescending:
-            result = result.sorted { $0.symbol > $1.symbol }
+        case .dateAscending:
+            result = result.sorted { $0.purchaseDate < $1.purchaseDate }
+        case .dateDescending:
+            result = result.sorted { $0.purchaseDate > $1.purchaseDate }
         case .purchaseDateAscending:
             result = result.sorted { $0.purchaseDate < $1.purchaseDate }
         case .purchaseDateDescending:
             result = result.sorted { $0.purchaseDate > $1.purchaseDate }
+        case .valueAscending:
+            result = result.sorted { $0.totalValue < $1.totalValue }
+        case .valueDescending:
+            result = result.sorted { $0.totalValue > $1.totalValue }
+        case .gainLossAscending:
+            result = result.sorted { $0.gainLoss < $1.gainLoss }
+        case .gainLossDescending:
+            result = result.sorted { $0.gainLoss > $1.gainLoss }
+        case .symbolAscending:
+            result = result.sorted { $0.symbol < $1.symbol }
+        case .symbolDescending:
+            result = result.sorted { $0.symbol > $1.symbol }
         }
         
         return result
@@ -161,7 +178,7 @@ class InvestmentViewModel: ObservableObject {
     }
     
     func updateInvestment() {
-        guard let investment = selectedInvestment,
+        guard let _ = selectedInvestment,
               canSaveInvestment,
               let shares = Double(investmentShares),
               let purchasePrice = Double(investmentPurchasePrice),
@@ -223,18 +240,13 @@ class InvestmentViewModel: ObservableObject {
         for investment in investments {
             let variation = Double.random(in: -0.05...0.05) // ±5% variation
             let newPrice = investment.currentPrice * (1 + variation)
-            dataService.updateInvestmentPrice(investment.id, newPrice: max(newPrice, 0.01))
+            
+            // Update the investment with new price
+            var updatedInvestment = investment
+            updatedInvestment.currentPrice = max(newPrice, 0.01)
+            dataService.updateInvestment(updatedInvestment)
         }
     }
 }
 
-enum InvestmentSortOption: String, CaseIterable {
-    case gainLossAscending = "Gain/Loss (Low to High)"
-    case gainLossDescending = "Gain/Loss (High to Low)"
-    case valueAscending = "Value (Low to High)"
-    case valueDescending = "Value (High to Low)"
-    case symbolAscending = "Symbol (A to Z)"
-    case symbolDescending = "Symbol (Z to A)"
-    case purchaseDateAscending = "Purchase Date (Oldest First)"
-    case purchaseDateDescending = "Purchase Date (Newest First)"
-}
+

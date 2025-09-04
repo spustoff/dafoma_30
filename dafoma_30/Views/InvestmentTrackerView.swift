@@ -242,7 +242,7 @@ struct InvestmentFiltersView: View {
                     
                     // Sort Options
                     Menu {
-                        ForEach(InvestmentSortOption.allCases, id: \.self) { option in
+                        ForEach(InvestmentViewModel.InvestmentSortOption.allCases, id: \.self) { option in
                             Button(option.rawValue) {
                                 viewModel.sortOption = option
                             }

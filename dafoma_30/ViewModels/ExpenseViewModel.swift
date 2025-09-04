@@ -132,7 +132,7 @@ class ExpenseViewModel: ObservableObject {
     }
     
     func updateExpense() {
-        guard let expense = selectedExpense,
+        guard let _ = selectedExpense,
               canSaveExpense,
               let amount = Double(expenseAmount) else { return }
         
@@ -196,3 +196,5 @@ enum SortOption: String, CaseIterable {
     case titleAscending = "Title (A to Z)"
     case titleDescending = "Title (Z to A)"
 }
+
+

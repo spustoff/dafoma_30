@@ -156,3 +156,5 @@ class DashboardViewModel: ObservableObject {
             .reduce(0) { $0 + $1.amount }
     }
 }
+
+
